@@ -1,277 +1,596 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Home, 
-  TrendingUp, 
-  MapPin, 
-  Play, 
-  Database, 
+  BedDouble, 
+  Bath, 
+  Maximize, 
+  Layers, 
+  CalendarDays, 
+  Star, 
+  Award, 
+  Calculator, 
   DollarSign, 
-  CheckCircle2, 
-  ChevronLeft,
-  Activity
+  TrendingUp, 
+  Sparkles, 
+  MapPin, 
+  Paintbrush, 
+  Building, 
+  User, 
+  Info, 
+  CheckCircle2,
+  Zap,
+  ChevronRight
 } from 'lucide-react';
 
-export default function App() {
-  const [activeTab, setActiveTab] = useState('models');
-  const [isMounted, setIsMounted] = useState(false);
-  const [selectedModel, setSelectedModel] = useState(null);
-  
-  // States for the prediction form
-  const [formData, setFormData] = useState({
-    bedrooms: 3,
-    bathrooms: 2,
-    sqft_living: 1500,
-    yr_built: 1990
-  });
-  
+const App = () => {
+  // State declaration for page entrance animations and interactivity
+  const [showContent, setShowContent] = useState(false);
   const [isPredicting, setIsPredicting] = useState(false);
   const [predictedPrice, setPredictedPrice] = useState(null);
+  const [displayPrice, setDisplayPrice] = useState(0); // For animated count-up number
+  const [priceRange, setPriceRange] = useState({ min: null, max: null });
 
-  // Trigger animations on mount
+  // Property features state calibrated for Egyptian market
+  const [formData, setFormData] = useState({
+    location: 'new_cairo',
+    finishing: 'super_lux',
+    propertyType: 'apartment',
+    sqm_living: 120,
+    bedrooms: 3,
+    bathrooms: 2,
+    floors: 1,
+    yr_built: 2018,
+    condition: 4,
+    grade: 8
+  });
+
   useEffect(() => {
-    setIsMounted(true);
-    // Auto-select the first model related to house_data.csv
-    setSelectedModel(modelsData[0]);
+    const timer = setTimeout(() => setShowContent(true), 100);
+    return () => clearTimeout(timer);
   }, []);
 
-  const modelsData = [
-    { 
-      id: 1, 
-      name: 'نموذج التنبؤ بأسعار العقارات', 
-      description: 'نموذج ذكاء اصطناعي مدرب على ملف house_data.csv لتوقع سعر المنزل بناءً على المساحة، الغرف، والموقع.', 
-      accuracy: '92.5%', 
-      status: 'نشط', 
-      icon: <Home className="w-8 h-8 text-cyan-400" /> 
-    },
-    { 
-      id: 2, 
-      name: 'تحليل اتجاهات السوق العقاري', 
-      description: 'يحلل البيانات التاريخية للعقارات لاستخراج رؤى حول الأماكن الأكثر طلباً.', 
-      accuracy: '89%', 
-      status: 'جاهز للاستخدام', 
-      icon: <TrendingUp className="w-8 h-8 text-purple-400" /> 
+  useEffect(() => {
+    if (predictedPrice === null) {
+      setDisplayPrice(0);
+      return;
     }
-  ];
 
-  const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    let start = 0;
+    const duration = 1200; // ms
+    const steps = 30;
+    const stepTime = duration / steps;
+    const increment = predictedPrice / steps;
+
+    const timer = setInterval(() => {
+      start += increment;
+      if (start >= predictedPrice) {
+        setDisplayPrice(predictedPrice);
+        clearInterval(timer);
+      } else {
+        setDisplayPrice(Math.round(start));
+      }
+    }, stepTime);
+
+    return () => clearInterval(timer);
+  }, [predictedPrice]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: isNaN(Number(value)) || value === '' ? value : Number(value)
+    }));
   };
 
-  const handlePredict = () => {
+  const handlePredict = (e) => {
+    e.preventDefault();
     setIsPredicting(true);
     setPredictedPrice(null);
-    
-    // Simulate model prediction time
+
+    // Simulated Machine Learning Model processing delay
     setTimeout(() => {
+      const locationMultipliers = {
+        new_cairo: 1.35,       // القاهرة الجديدة والتجمع الخامس
+        zayed: 1.30,           // الشيخ زايد و6 أكتوبر
+        maadi_heliopolis: 1.20,// المعادي ومصر الجديدة
+        alex_coast: 1.10,      // الإسكندرية والساحل
+        delta_provinces: 0.90, // محافظات الوجه البحري والدلتا
+        upper_egypt: 0.80      // الصعيد والمناطق الإقليمية
+      };
+
+      const finishingMultipliers = {
+        core_shell: 0.75,  // بدون تشطيب / محارة
+        semi: 0.88,        // نصف تشطيب
+        super_lux: 1.12,   // سوبر لوكس
+        ultra_lux: 1.25    // ألترا سوبر لوكس
+      };
+
+      const typeMultipliers = {
+        apartment: 1.0,
+        duplex: 1.20,
+        townhouse: 1.35,
+        standalone_villa: 1.60
+      };
+
+      // Base SQM Rate adjusted for thousands scale EGP
+      const baseSqmRate = 3400; 
+      const locMult = locationMultipliers[formData.location] || 1.0;
+      const finishMult = finishingMultipliers[formData.finishing] || 1.0;
+      const typeMult = typeMultipliers[formData.propertyType] || 1.0;
+
+      let calculatedPrice = formData.sqm_living * baseSqmRate * locMult * finishMult * typeMult;
+
+      // Grade factor (1 to 13)
+      const gradeFactor = 1 + ((formData.grade - 7) * 0.04);
+      calculatedPrice *= gradeFactor;
+
+      // House Condition factor (1 to 5)
+      const conditionFactor = 1 + ((formData.condition - 3) * 0.03);
+      calculatedPrice *= conditionFactor;
+
+      // Age discount
+      const currentYear = 2026;
+      const age = Math.max(0, currentYear - formData.yr_built);
+      const ageDiscount = Math.min(0.20, age * 0.005);
+      calculatedPrice *= (1 - ageDiscount);
+
+      const finalEstimate = Math.round(calculatedPrice);
+      const minVal = Math.round(finalEstimate * 0.93);
+      const maxVal = Math.round(finalEstimate * 1.07);
+
       setIsPredicting(false);
-      // Dummy calculation logic for UI purpose based on inputs
-      const basePrice = 50000;
-      const price = basePrice + (formData.bedrooms * 20000) + (formData.bathrooms * 15000) + (formData.sqft_living * 150);
-      setPredictedPrice(price.toLocaleString());
-    }, 2500);
+      setPredictedPrice(finalEstimate);
+      setPriceRange({ min: minVal, max: maxVal });
+    }, 1100);
+  };
+
+  const formatEGP = (amount) => {
+    return new Intl.NumberFormat('en-EG', {
+      style: 'currency',
+      currency: 'EGP',
+      maximumFractionDigits: 0
+    }).format(amount);
   };
 
   return (
-    <div dir="rtl" className="min-h-screen bg-slate-950 text-slate-200 font-sans overflow-hidden flex">
-      {/* CSS Animations */}
-      <style>{`
-        @keyframes gradient-text {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
+    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans relative overflow-x-hidden pb-16 selection:bg-purple-500 selection:text-white">
+      
+      {}
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes floatSlow {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-18px) rotate(3deg); }
         }
-        .text-gradient {
-          background: linear-gradient(270deg, #06b6d4, #8b5cf6, #3b82f6);
-          background-size: 200% 200%;
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          animation: gradient-text 5s ease infinite;
+        @keyframes floatReverse {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(18px) rotate(-3deg); }
         }
-        .fade-in-up {
-          opacity: 0;
-          transform: translateY(20px);
-          transition: opacity 0.8s ease-out, transform 0.8s ease-out;
-        }
-        .fade-in-up.visible {
-          opacity: 1;
-          transform: translateY(0);
-        }
-        .price-reveal {
-          animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        @keyframes shimmerGlow {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
         }
         @keyframes popIn {
-          0% { opacity: 0; transform: scale(0.5); }
-          100% { opacity: 1; transform: scale(1); }
+          0% { opacity: 0; transform: scale(0.9) translateY(10px); }
+          100% { opacity: 1; transform: scale(1) translateY(0); }
         }
-      `}</style>
+        @keyframes pulseBorder {
+          0%, 100% { border-color: rgba(168, 85, 247, 0.4); box-shadow: 0 0 15px rgba(168, 85, 247, 0.2); }
+          50% { border-color: rgba(236, 72, 153, 0.8); box-shadow: 0 0 25px rgba(236, 72, 153, 0.4); }
+        }
 
-      {/* Sidebar */}
-      <aside className="w-64 bg-slate-900 border-l border-slate-800 flex flex-col justify-between hidden md:flex z-10 shadow-2xl">
-        <div>
-          <div className="p-6 border-b border-slate-800">
-            <div className="flex items-center gap-3">
-              <Database className="w-8 h-8 text-cyan-400" />
-              <h1 className="text-xl font-bold text-white tracking-wide">بيانات العقارات</h1>
+        .animate-float-1 { animation: floatSlow 8s ease-in-out infinite; }
+        .animate-float-2 { animation: floatReverse 10s ease-in-out infinite; }
+        .animate-pop-in { animation: popIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .animate-pulse-border { animation: pulseBorder 3s infinite; }
+        
+        .shimmer-text {
+          background: linear-gradient(90deg, #ffffff 0%, #c084fc 35%, #f472b6 65%, #ffffff 100%);
+          background-size: 200% auto;
+          color: transparent;
+          -webkit-background-clip: text;
+          animation: shimmerGlow 4s linear infinite;
+        }
+
+        .shimmer-btn {
+          background: linear-gradient(90deg, #4f46e5, #9333ea, #ec4899, #4f46e5);
+          background-size: 300% 100%;
+          transition: all 0.5s ease;
+        }
+        .shimmer-btn:hover {
+          background-position: 100% 0;
+          box-shadow: 0 10px 30px -5px rgba(168, 85, 247, 0.6);
+        }
+      `}} />
+
+      {}
+      <div className="fixed top-[-50px] left-1/4 w-[550px] h-[550px] bg-indigo-600/20 rounded-full blur-[140px] pointer-events-none animate-float-1"></div>
+      <div className="fixed bottom-[-50px] right-1/4 w-[500px] h-[500px] bg-pink-600/20 rounded-full blur-[140px] pointer-events-none animate-float-2"></div>
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-[160px] pointer-events-none"></div>
+
+      {}
+      <div className="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-md border-b border-purple-500/30 shadow-xl shadow-purple-950/30">
+        <div className="max-w-7xl mx-auto px-4 py-3 sm:py-4 flex flex-col md:flex-row items-center justify-between gap-3 text-center md:text-left">
+          
+          <div className="flex items-center gap-3 transform hover:scale-102 transition-transform cursor-pointer">
+            <div className="p-2.5 bg-gradient-to-tr from-purple-600 via-indigo-600 to-pink-500 rounded-xl shadow-lg shadow-purple-500/30 text-white animate-bounce-slow">
+              <User size={26} />
             </div>
-            <div className="mt-3 bg-slate-800/50 p-2 rounded-lg border border-slate-700 flex items-center justify-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
-              <span className="text-xs text-slate-300 font-mono">house_data.csv متصل</span>
+            <div>
+              <div className="flex items-center gap-2 justify-center md:justify-start">
+                <span className="text-[11px] uppercase tracking-widest text-purple-300 font-extrabold">Created & Developed By</span>
+                <span className="bg-purple-500/20 text-pink-300 text-[10px] px-2 py-0.5 rounded-full border border-pink-500/30 font-semibold flex items-center gap-1">
+                  <Zap size={10} className="fill-pink-400 text-pink-400" /> ML Engineer
+                </span>
+              </div>
+              <h1 className="text-xl sm:text-2xl font-black tracking-tight shimmer-text">
+                Yousef Khaled Madin
+              </h1>
             </div>
           </div>
-          <nav className="p-4 space-y-2">
-            <button className="w-full flex items-center gap-3 p-3 rounded-xl bg-blue-600/20 text-cyan-400 shadow-[inset_4px_0_0_0_#22d3ee] transition-all">
-              <Activity className="w-5 h-5" />
-              <span className="font-medium">النماذج واختبارها</span>
-            </button>
-          </nav>
-        </div>
-      </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col h-screen overflow-y-auto relative">
-        {/* Background Blur Effects */}
-        <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-cyan-900/10 rounded-full blur-[100px] pointer-events-none"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-purple-900/10 rounded-full blur-[100px] pointer-events-none"></div>
-
-        {/* Header */}
-        <header className="p-8 pb-4 z-10 flex justify-between items-center">
-          <div className={`fade-in-up ${isMounted ? 'visible' : ''}`}>
-            <h2 className="text-3xl md:text-4xl font-extrabold mb-2">
-              <span className="text-white">نموذج </span>
-              <span className="text-gradient">تحليل وتسعير العقارات</span>
-            </h2>
-            <p className="text-slate-400 text-lg mt-2">
-              قم بإدخال مواصفات المنزل للحصول على السعر المتوقع بدقة.
-            </p>
+          <div className="bg-purple-950/70 px-4 py-2 rounded-xl border border-purple-500/40 text-xs sm:text-sm text-purple-200 font-medium flex items-center gap-2 shadow-inner hover:border-purple-400 transition-colors" dir="rtl">
+            <Sparkles size={16} className="text-pink-400 animate-spin" />
+            <span>تم تطوير وإنشاء هذا الموديل بواسطة المطور <strong>يوسف خالد مدين</strong></span>
           </div>
-        </header>
 
-        {/* Dynamic Content Area */}
-        <div className="p-8 z-10 flex-1">
-          {selectedModel && (
-            <div className={`fade-in-up ${isMounted ? 'visible' : ''} bg-slate-900 rounded-2xl border border-slate-800 p-8 shadow-2xl relative overflow-hidden flex flex-col lg:flex-row gap-8`}>
-               <div className="absolute top-0 right-0 w-full h-1 bg-gradient-to-l from-cyan-500 to-purple-500"></div>
-               
-               {/* Right Side: Model Info & Form */}
-               <div className="flex-1">
-                 <div className="flex items-start gap-4 mb-8">
-                   <div className="p-4 bg-slate-800 rounded-2xl shadow-inner border border-slate-700">
-                     {selectedModel.icon}
-                   </div>
-                   <div>
-                     <h3 className="text-2xl font-bold text-white mb-2">{selectedModel.name}</h3>
-                     <p className="text-slate-400 text-sm max-w-md">{selectedModel.description}</p>
-                   </div>
-                 </div>
-
-                 {/* Input Form */}
-                 <div className="bg-slate-950/50 p-6 rounded-xl border border-slate-800">
-                   <h4 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
-                     <MapPin className="w-5 h-5 text-cyan-400" />
-                     مواصفات العقار
-                   </h4>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                     <div>
-                       <label className="block text-sm text-slate-400 mb-2">عدد الغرف (Bedrooms)</label>
-                       <input 
-                         type="number" 
-                         name="bedrooms"
-                         value={formData.bedrooms}
-                         onChange={handleInputChange}
-                         className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-cyan-500 transition-colors"
-                       />
-                     </div>
-                     <div>
-                       <label className="block text-sm text-slate-400 mb-2">عدد الحمامات (Bathrooms)</label>
-                       <input 
-                         type="number" 
-                         name="bathrooms"
-                         value={formData.bathrooms}
-                         onChange={handleInputChange}
-                         className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-cyan-500 transition-colors"
-                       />
-                     </div>
-                     <div>
-                       <label className="block text-sm text-slate-400 mb-2">المساحة (Sqft Living)</label>
-                       <input 
-                         type="number" 
-                         name="sqft_living"
-                         value={formData.sqft_living}
-                         onChange={handleInputChange}
-                         className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-cyan-500 transition-colors"
-                       />
-                     </div>
-                     <div>
-                       <label className="block text-sm text-slate-400 mb-2">سنة البناء (Year Built)</label>
-                       <input 
-                         type="number" 
-                         name="yr_built"
-                         value={formData.yr_built}
-                         onChange={handleInputChange}
-                         className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-cyan-500 transition-colors"
-                       />
-                     </div>
-                   </div>
-
-                   <button 
-                    onClick={handlePredict}
-                    disabled={isPredicting}
-                    className={`mt-6 w-full text-white py-3 rounded-xl transition-all font-bold text-lg shadow-lg flex items-center justify-center gap-3 ${isPredicting ? 'bg-cyan-700/50 cursor-not-allowed' : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 hover:shadow-cyan-500/25'}`}
-                   >
-                     {isPredicting ? (
-                       <>
-                         <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                         جاري تحليل البيانات واستخراج السعر...
-                       </>
-                     ) : (
-                       <><Play className="w-5 h-5" /> توقع السعر الآن</>
-                     )}
-                   </button>
-                 </div>
-               </div>
-
-               {/* Left Side: Result Area */}
-               <div className="flex-1 flex flex-col justify-center items-center bg-slate-800/30 rounded-xl border border-slate-700/50 p-8 min-h-[400px]">
-                 {!predictedPrice && !isPredicting ? (
-                   <div className="text-center opacity-50">
-                     <DollarSign className="w-16 h-16 mx-auto mb-4 text-slate-500" />
-                     <p className="text-lg">أدخل البيانات واضغط على توقع السعر لترى النتيجة هنا.</p>
-                   </div>
-                 ) : isPredicting ? (
-                   <div className="text-center">
-                     <Activity className="w-16 h-16 mx-auto mb-4 text-cyan-400 animate-bounce" />
-                     <p className="text-lg text-cyan-400 animate-pulse font-medium">يقوم نموذج الذكاء الاصطناعي بالحساب...</p>
-                   </div>
-                 ) : (
-                   <div className="text-center price-reveal">
-                     <div className="inline-flex items-center justify-center p-4 bg-emerald-500/10 rounded-full mb-6">
-                       <CheckCircle2 className="w-12 h-12 text-emerald-400" />
-                     </div>
-                     <h4 className="text-2xl text-slate-300 mb-2">السعر المتوقع للعقار هو:</h4>
-                     <div className="text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 mb-4 drop-shadow-lg">
-                       ${predictedPrice}
-                     </div>
-                     <p className="text-slate-400 text-sm bg-slate-900/50 p-3 rounded-lg border border-slate-800">
-                       تم الحساب بناءً على مساحة {formData.sqft_living} قدم مربع، و {formData.bedrooms} غرف.
-                     </p>
-                   </div>
-                 )}
-               </div>
-            </div>
-          )}
         </div>
-      </main>
+      </div>
+
+      {}
+      <div className="max-w-7xl mx-auto px-4 pt-8 sm:pt-12">
+        
+        {/* Title & Introduction Header */}
+        <div className={`text-center max-w-3xl mx-auto mb-10 transition-all duration-1000 transform ${showContent ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-8'}`}>
+          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-indigo-500/20 border border-purple-500/40 px-4 py-1.5 rounded-full text-xs font-bold text-purple-200 mb-4 shadow-lg backdrop-blur-sm animate-pulse">
+            <Building size={15} className="text-indigo-400" />
+            <span>AI Real Estate Valuation Model • Egyptian Market (EGP)</span>
+          </div>
+
+          <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight mb-4">
+            Real Estate Price Predictor <br />
+            <span className="bg-gradient-to-r from-cyan-400 via-indigo-300 to-pink-400 bg-clip-text text-transparent">
+              Fair Market Value Estimation
+            </span>
+          </h2>
+
+          <p className="text-slate-400 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
+            Input property parameters below to receive real-time Machine Learning valuation calibrated for the Egyptian real estate market in thousands EGP.
+          </p>
+
+          {/* User Arabic Explanation Helper Card */}
+          <div className="mt-5 p-4 rounded-2xl bg-slate-900/90 border border-indigo-500/30 text-indigo-200 text-xs sm:text-sm leading-relaxed text-center shadow-xl hover:border-indigo-500/60 transition-all duration-300" dir="rtl">
+            <span className="font-bold text-cyan-400 ml-1.5 inline-flex items-center gap-1">
+              <Info size={16} /> شرح بسيط للمستخدم:
+            </span>
+            هذه الواجهة التفاعلية تُمكنك من التنبؤ بسعر العقار بالجنيه المصري (EGP) بالآلاف بناءً على المواصفات كالمساحة بالمتر المربع، الموقع، ونوع التشطيب.
+          </div>
+        </div>
+
+        {}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          
+          {/* Input Form Section */}
+          <div className={`lg:col-span-7 transition-all duration-1000 delay-200 transform ${showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+            <div className="bg-slate-900/80 backdrop-blur-2xl rounded-3xl border border-slate-800 p-6 sm:p-8 shadow-2xl relative overflow-hidden hover:border-slate-700 transition-all">
+              
+              <div className="flex items-center gap-3 border-b border-slate-800/80 pb-5 mb-6">
+                <div className="p-3 bg-indigo-600/20 text-indigo-400 rounded-2xl border border-indigo-500/30 shadow-inner">
+                  <Calculator size={24} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Property Parameters</h3>
+                  <p className="text-xs text-slate-400">Configure parameters to evaluate model prediction</p>
+                </div>
+              </div>
+
+              <form onSubmit={handlePredict} className="space-y-5">
+                
+                {/* Location Select */}
+                <div className="group">
+                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5 group-hover:text-indigo-300 transition-colors">
+                    <MapPin size={15} className="text-indigo-400" />
+                    <span>Location / Area (الموقع والمنطقة)</span>
+                  </label>
+                  <select 
+                    name="location"
+                    value={formData.location}
+                    onChange={handleChange}
+                    className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 rounded-xl px-4 py-3.5 text-slate-200 text-sm outline-none transition-all cursor-pointer hover:border-slate-700"
+                  >
+                    <option value="new_cairo">New Cairo & Fifth Settlement (القاهرة الجديدة والتجمع)</option>
+                    <option value="zayed">Sheikh Zayed & 6th October (الشيخ زايد و6 أكتوبر)</option>
+                    <option value="maadi_heliopolis">Maadi & Heliopolis (المعادي ومصر الجديدة)</option>
+                    <option value="alex_coast">Alexandria & North Coast (الإسكندرية والساحل)</option>
+                    <option value="delta_provinces">Delta Governorates (محافظات الوجه البحري والدلتا)</option>
+                    <option value="upper_egypt">Upper Egypt & Regional (الصعيد والمناطق الإقليمية)</option>
+                  </select>
+                </div>
+
+                {/* Property Type & Finishing Level Row */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div className="group">
+                    <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5 group-hover:text-purple-300 transition-colors">
+                      <Building size={15} className="text-purple-400" />
+                      <span>Property Type (نوع العقار)</span>
+                    </label>
+                    <select 
+                      name="propertyType"
+                      value={formData.propertyType}
+                      onChange={handleChange}
+                      className="w-full bg-slate-950 border border-slate-800 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30 rounded-xl px-4 py-3.5 text-slate-200 text-sm outline-none transition-all cursor-pointer hover:border-slate-700"
+                    >
+                      <option value="apartment">Apartment (شقة سكنية)</option>
+                      <option value="duplex">Duplex / Penthouse (دوبلكس / بنتهاوس)</option>
+                      <option value="townhouse">Townhouse / Twinhouse (تاون هاوس)</option>
+                      <option value="standalone_villa">Standalone Villa (فيلا مستقلة)</option>
+                    </select>
+                  </div>
+
+                  <div className="group">
+                    <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5 group-hover:text-pink-300 transition-colors">
+                      <Paintbrush size={15} className="text-pink-400" />
+                      <span>Finishing Level (مستوى التشطيب)</span>
+                    </label>
+                    <select 
+                      name="finishing"
+                      value={formData.finishing}
+                      onChange={handleChange}
+                      className="w-full bg-slate-950 border border-slate-800 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/30 rounded-xl px-4 py-3.5 text-slate-200 text-sm outline-none transition-all cursor-pointer hover:border-slate-700"
+                    >
+                      <option value="core_shell">Core & Shell / Unfinished (بدون تشطيب / محارة)</option>
+                      <option value="semi">Semi-Finished (نصف تشطيب)</option>
+                      <option value="super_lux">Super Lux (سوبر لوكس)</option>
+                      <option value="ultra_lux">Ultra Lux / Deluxe (ألترا سوبر لوكس)</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* SQM Area & Bedrooms Row */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div className="group">
+                    <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5 group-hover:text-cyan-300 transition-colors">
+                      <Maximize size={15} className="text-cyan-400" />
+                      <span>Living Area - sq.m (المساحة بالمتر)</span>
+                    </label>
+                    <div className="relative">
+                      <input 
+                        type="number"
+                        name="sqm_living"
+                        value={formData.sqm_living}
+                        onChange={handleChange}
+                        min="30"
+                        max="1500"
+                        className="w-full bg-slate-950 border border-slate-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/30 rounded-xl px-4 py-3.5 text-slate-200 text-sm outline-none transition-all hover:border-slate-700"
+                      />
+                      <span className="absolute right-3 top-3.5 text-xs text-slate-500 font-extrabold bg-slate-900 px-2 py-0.5 rounded border border-slate-800">m²</span>
+                    </div>
+                  </div>
+
+                  <div className="group">
+                    <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5 group-hover:text-indigo-300 transition-colors">
+                      <BedDouble size={15} className="text-indigo-400" />
+                      <span>Bedrooms (عدد الغرف)</span>
+                    </label>
+                    <input 
+                      type="number"
+                      name="bedrooms"
+                      value={formData.bedrooms}
+                      onChange={handleChange}
+                      min="1"
+                      max="12"
+                      className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 rounded-xl px-4 py-3.5 text-slate-200 text-sm outline-none transition-all hover:border-slate-700"
+                    />
+                  </div>
+                </div>
+
+                {/* Bathrooms, Floors & Year Built Row */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                      <Bath size={15} className="text-teal-400" />
+                      <span>Bathrooms (الحمامات)</span>
+                    </label>
+                    <input 
+                      type="number"
+                      name="bathrooms"
+                      value={formData.bathrooms}
+                      onChange={handleChange}
+                      min="1"
+                      max="8"
+                      className="w-full bg-slate-950 border border-slate-800 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/30 rounded-xl px-4 py-3.5 text-slate-200 text-sm outline-none transition-all hover:border-slate-700"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                      <Layers size={15} className="text-amber-400" />
+                      <span>Floors (الطوابق)</span>
+                    </label>
+                    <input 
+                      type="number"
+                      name="floors"
+                      value={formData.floors}
+                      onChange={handleChange}
+                      min="1"
+                      max="5"
+                      className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/30 rounded-xl px-4 py-3.5 text-slate-200 text-sm outline-none transition-all hover:border-slate-700"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                      <CalendarDays size={15} className="text-emerald-400" />
+                      <span>Year Built (سنة البناء)</span>
+                    </label>
+                    <input 
+                      type="number"
+                      name="yr_built"
+                      value={formData.yr_built}
+                      onChange={handleChange}
+                      min="1950"
+                      max="2026"
+                      className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 rounded-xl px-4 py-3.5 text-slate-200 text-sm outline-none transition-all hover:border-slate-700"
+                    />
+                  </div>
+                </div>
+
+                {/* Condition & Grade Range Sliders */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-2">
+                  <div className="bg-slate-950/70 p-4 rounded-2xl border border-slate-800 hover:border-amber-500/40 transition-colors">
+                    <div className="flex justify-between items-center mb-3">
+                      <label className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1">
+                        <Star size={14} className="text-amber-400" />
+                        <span>Condition (الحالة 1 - 5)</span>
+                      </label>
+                      <span className="text-xs font-black text-amber-400 px-2.5 py-1 rounded-lg bg-amber-400/10 border border-amber-400/30 shadow-inner">
+                        {formData.condition} / 5
+                      </span>
+                    </div>
+                    <input 
+                      type="range"
+                      name="condition"
+                      min="1"
+                      max="5"
+                      value={formData.condition}
+                      onChange={handleChange}
+                      className="w-full accent-amber-400 cursor-pointer h-2 bg-slate-800 rounded-lg"
+                    />
+                  </div>
+
+                  <div className="bg-slate-950/70 p-4 rounded-2xl border border-slate-800 hover:border-purple-500/40 transition-colors">
+                    <div className="flex justify-between items-center mb-3">
+                      <label className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1">
+                        <Award size={14} className="text-purple-400" />
+                        <span>Grade (التقييم 1 - 13)</span>
+                      </label>
+                      <span className="text-xs font-black text-purple-400 px-2.5 py-1 rounded-lg bg-purple-400/10 border border-purple-400/30 shadow-inner">
+                        {formData.grade} / 13
+                      </span>
+                    </div>
+                    <input 
+                      type="range"
+                      name="grade"
+                      min="1"
+                      max="13"
+                      value={formData.grade}
+                      onChange={handleChange}
+                      className="w-full accent-purple-400 cursor-pointer h-2 bg-slate-800 rounded-lg"
+                    />
+                  </div>
+                </div>
+
+                {}
+                <button
+                  type="submit"
+                  disabled={isPredicting}
+                  className="w-full mt-6 shimmer-btn text-white font-black py-4 px-6 rounded-2xl shadow-xl transform active:scale-95 transition-all flex items-center justify-center gap-2.5 disabled:opacity-50 cursor-pointer group"
+                >
+                  {isPredicting ? (
+                    <>
+                      <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      <span className="tracking-wide">Running Prediction Model... (جاري الحساب)</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles size={20} className="text-pink-300 group-hover:rotate-12 transition-transform" />
+                      <span className="text-base tracking-wide">Calculate Estimated Price (احسب السعر المتوقع)</span>
+                      <ChevronRight size={18} className="text-pink-200 group-hover:translate-x-1 transition-transform" />
+                    </>
+                  )}
+                </button>
+
+              </form>
+            </div>
+          </div>
+
+          {}
+          <div className={`lg:col-span-5 transition-all duration-1000 delay-300 transform ${showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+            <div className="sticky top-24 space-y-6">
+              
+              <div className={`bg-slate-900/90 backdrop-blur-2xl rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden text-center transition-all duration-500 ${predictedPrice !== null ? 'animate-pulse-border border-2' : 'border border-indigo-500/30'}`}>
+                
+                {/* Result Glow Decorative Element */}
+                <div className="absolute -top-20 -right-20 w-44 h-44 bg-purple-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+                <div className="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/30 px-3.5 py-1.5 rounded-full text-xs font-bold text-indigo-300 mb-6 shadow-inner">
+                  <TrendingUp size={14} className="text-cyan-400" />
+                  <span>Model Output Result (نتيجة التقدير)</span>
+                </div>
+
+                {isPredicting && (
+                  <div className="py-12 flex flex-col items-center justify-center space-y-4">
+                    <div className="relative">
+                      <div className="w-14 h-14 border-4 border-indigo-500/20 border-t-indigo-400 rounded-full animate-spin"></div>
+                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                        <Sparkles size={20} className="text-pink-400 animate-pulse" />
+                      </div>
+                    </div>
+                    <p className="text-sm font-semibold text-slate-300 animate-pulse">Running ML evaluation algorithms...</p>
+                  </div>
+                )}
+
+                {!isPredicting && predictedPrice === null && (
+                  <div className="py-12 border-2 border-dashed border-slate-800 rounded-2xl p-6 hover:border-slate-700 transition-colors">
+                    <DollarSign size={44} className="mx-auto text-slate-600 mb-3 animate-bounce-slow" />
+                    <p className="text-sm font-bold text-slate-300">Ready to Estimate</p>
+                    <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">Configure property specs and click calculate to view estimated market valuation in EGP thousands.</p>
+                  </div>
+                )}
+
+                {!isPredicting && predictedPrice !== null && (
+                  <div className="animate-pop-in space-y-5">
+                    <p className="text-xs font-extrabold text-slate-400 uppercase tracking-widest">
+                      Estimated Fair Market Price
+                    </p>
+                    
+                    {/* Animated Number Counter Display */}
+                    <div className="text-3xl sm:text-4xl lg:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 tracking-tight drop-shadow-md">
+                      {formatEGP(displayPrice)}
+                    </div>
+
+                    {priceRange.min && priceRange.max && (
+                      <div className="p-3.5 bg-slate-950/80 rounded-2xl border border-slate-800/80 text-xs text-slate-400 flex justify-between items-center shadow-inner">
+                        <span className="font-semibold text-slate-300">Expected Range:</span>
+                        <span className="text-emerald-400 font-mono font-bold text-sm">
+                          {formatEGP(priceRange.min)} - {formatEGP(priceRange.max)}
+                        </span>
+                      </div>
+                    )}
+
+                    <div className="p-4 rounded-2xl bg-emerald-950/30 border border-emerald-500/30 text-emerald-200 text-xs leading-relaxed text-right shadow-lg" dir="rtl">
+                      <div className="flex items-center gap-1.5 font-bold mb-1 text-emerald-400">
+                        <CheckCircle2 size={16} />
+                        <span>تقييم النطاق (EGP بالآلاف):</span>
+                      </div>
+                      تم احتساب السعر بنطاق الآلاف بالجنيه المصري بناءً على المساحة بالمتر المربع ومؤشرات السوق المحسوبة بالذكاء الاصطناعي.
+                    </div>
+                  </div>
+                )}
+
+              </div>
+
+              {}
+              <div className="bg-slate-900/70 rounded-2xl border border-slate-800 p-5 text-xs text-slate-400 space-y-3 shadow-lg hover:border-slate-700 transition-colors">
+                <div className="flex items-center gap-2 text-indigo-400 font-bold text-sm">
+                  <Info size={16} />
+                  <span>About Model Parameters (عن إعدادات الموديل)</span>
+                </div>
+                <p className="leading-relaxed">
+                  The Machine Learning architecture evaluates feature weights including geospatial area indices, finishing multipliers, living area in square meters, and structural grades.
+                </p>
+                <div className="p-3 rounded-xl bg-slate-950 text-indigo-300 text-[11px] font-medium border border-indigo-500/20" dir="rtl">
+                  💡 تم إعداد الموديل وضبطه بواسطة المطور <strong>يوسف خالد مدين (Yousef Khaled Madin)</strong> ليراعي أسعار السوق المصري بالجنيه.
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+      </div>
     </div>
   );
-}
-```eof
+};
 
-### ماذا تغير في هذه الواجهة لتناسب ملفك؟
-1. **ربط وهمي بالملف:** أضفت إشارة بصرية في القائمة الجانبية توضح أن النظام متصل بقاعدة بيانات `house_data.csv`.
-2. **مدخلات متخصصة (Inputs):** بدلاً من زر الرفع العادي، صممت "فورم" (Form) مخصص لإدخال البيانات التي يعتمد عليها ملفك لتقييم المنازل (مثل عدد الغرف، مساحة المعيشة، عدد الحمامات، وسنة البناء).
-3. **تأثيرات بصرية لحساب السعر:** عندما يضغط المستخدم على "توقع السعر الآن"، يبدأ تأثير التحميل (Loading state)، ثم يظهر السعر بشكل جذاب وبحركة انبثاقية (Pop-in Animation).
-
-بإمكانك تجربة الكود وسترى كيف أن الواجهة أصبحت جاهزة تماماً لربطها بالكود البرمجي الخاص بنموذجك (Model) في الخلفية! هل تفضل أن نضيف رسوم بيانية (Charts) توضح توزيع الأسعار أيضاً في الواجهة؟
+export default App;
