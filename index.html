@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>توقع أسعار المنازل الذكي</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: #ffffff;
+            width: 100%;
+            max-width: 650px;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 0.8s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            text-align: center;
+            color: #1a202c;
+            margin-bottom: 10px;
+            font-size: 26px;
+        }
+
+        p.subtitle {
+            text-align: center;
+            color: #718096;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #4a5568;
+        }
+
+        .input-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            accent-color: #4c51bf;
+            cursor: pointer;
+        }
+
+        .range-value {
+            background: #edf2f7;
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            color: #4c51bf;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .btn-predict {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(118, 75, 162, 0.4);
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .btn-predict:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(118, 75, 162, 0.6);
+        }
+
+        .result-box {
+            margin-top: 25px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            display: none;
+            animation: popUp 0.5s ease-in-out;
+        }
+
+        @keyframes popUp {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .result-box h3 {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        .result-box .price {
+            font-size: 32px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🏡 توقع أسعار المنازل الذكي</h1>
+        <p class="subtitle">قم بتحديد مواصفات العقار للحصول على السعر التقديري فوراً</p>
+
+        <div class="form-group">
+            <label for="bedrooms">عدد الغرف (Bedrooms):</label>
+            <div class="input-row">
+                <input type="range" id="bedrooms" min="1" max="10" value="3" oninput="updateValue('bedrooms', 'val-bedrooms')">
+                <span class="range-value" id="val-bedrooms">3</span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="bathrooms">عدد الحمامات (Bathrooms):</label>
+            <div class="input-row">
+                <input type="range" id="bathrooms" min="1" max="8" step="0.5" value="2" oninput="updateValue('bathrooms', 'val-bathrooms')">
+                <span class="range-value" id="val-bathrooms">2</span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="sqft">مساحة المعيشة (قدم مربع):</label>
+            <div class="input-row">
+                <input type="range" id="sqft" min="500" max="8000" step="50" value="2000" oninput="updateValue('sqft', 'val-sqft')">
+                <span class="range-value" id="val-sqft">2000</span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="floors">عدد الطوابق (Floors):</label>
+            <div class="input-row">
+                <input type="range" id="floors" min="1" max="3.5" step="0.5" value="1" oninput="updateValue('floors', 'val-floors')">
+                <span class="range-value" id="val-floors">1</span>
+            </div>
+        </div>
+
+        <button class="btn-predict" onclick="calculatePrice()">توقع السعر الآن 🚀</button>
+
+        <div class="result-box" id="resultBox">
+            <h3>✨ السعر المتوقع للعقار ✨</h3>
+            <div class="price" id="priceOutput">$0</div>
+        </div>
+    </div>
+
+    <script>
+        // تحديث القيمة بجانب الـ Slider لحظياً
+        function updateValue(sliderId, spanId) {
+            document.getElementById(spanId).innerText = document.getElementById(sliderId).value;
+        }
+
+        // دالة تقدير السعر (معادلة تقريبية كمثال تفاعلي، أو يمكنك ربطها بنموذج البايثون لاحقاً)
+        function calculatePrice() {
+            let bedrooms = parseFloat(document.getElementById('bedrooms').value);
+            let bathrooms = parseFloat(document.getElementById('bathrooms').value);
+            let sqft = parseFloat(document.getElementById('sqft').value);
+            let floors = parseFloat(document.getElementById('floors').value);
+
+            // معادلة تقريبية لحساب السعر بناءً على المتغيرات
+            let basePrice = 50000;
+            let predicted = basePrice + (sqft * 180) + (bedrooms * 15000) + (bathrooms * 20000) + (floors * 25000);
+
+            // إظهار النتيجة بتأثير حركي
+            let resultBox = document.getElementById('resultBox');
+            let priceOutput = document.getElementById('priceOutput');
+            
+            resultBox.style.display = 'block';
+            
+            // حركة تصاعدية للأرقام لإعطاء طابع احترافي
+            let currentPrice = 0;
+            let increment = predicted / 30;
+            let timer = setInterval(() => {
+                currentPrice += increment;
+                if (currentPrice >= predicted) {
+                    currentPrice = predicted;
+                    clearInterval(timer);
+                }
+                priceOutput.innerText = "$" + Math.round(currentPrice).toLocaleString();
+            }, 20);
+        }
+    </script>
+
+</body>
+</html>
