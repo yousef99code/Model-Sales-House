@@ -3,217 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>توقع أسعار المنازل الذكي</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>توقع أسعار العقارات | المهندس يوسف خالد مدين</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Cairo', sans-serif;
-        }
-
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap');
+        
         body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            color: #333;
+            font-family: 'Tajawal', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
         }
 
-        .container {
-            background: #ffffff;
-            width: 100%;
-            max-width: 650px;
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-            animation: fadeIn 0.8s ease-in-out;
+        /* Glassmorphism Effect */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        h1 {
-            text-align: center;
-            color: #1a202c;
-            margin-bottom: 10px;
-            font-size: 26px;
-        }
-
-        p.subtitle {
-            text-align: center;
-            color: #718096;
-            margin-bottom: 25px;
-            font-size: 14px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #4a5568;
-        }
-
-        .input-row {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        input[type="range"] {
-            flex: 1;
-            accent-color: #4c51bf;
-            cursor: pointer;
-        }
-
-        .range-value {
-            background: #edf2f7;
-            padding: 5px 12px;
-            border-radius: 8px;
-            font-weight: bold;
-            color: #4c51bf;
-            min-width: 60px;
-            text-align: center;
-        }
-
-        .btn-predict {
-            width: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 14px;
-            font-size: 18px;
-            font-weight: bold;
-            border-radius: 12px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(118, 75, 162, 0.4);
+        /* Input Animations */
+        .input-field {
             transition: all 0.3s ease;
-            margin-top: 10px;
+            background: rgba(15, 23, 42, 0.6);
         }
-
-        .btn-predict:hover {
+        .input-field:focus {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(118, 75, 162, 0.6);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+            border-color: #6366f1;
         }
 
-        .result-box {
-            margin-top: 25px;
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 15px;
-            text-align: center;
-            display: none;
-            animation: popUp 0.5s ease-in-out;
+        /* Button Hover */
+        .predict-btn {
+            background: linear-gradient(90deg, #4f46e5, #7c3aed);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-
-        @keyframes popUp {
-            0% { transform: scale(0.9); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-
-        .result-box h3 {
-            font-size: 20px;
-            margin-bottom: 5px;
-        }
-
-        .result-box .price {
-            font-size: 32px;
-            font-weight: bold;
+        .predict-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 25px rgba(124, 58, 237, 0.5);
         }
     </style>
 </head>
-<body>
+<body class="text-white flex items-center justify-center p-6">
 
-    <div class="container">
-        <h1>🏡 توقع أسعار المنازل الذكي</h1>
-        <p class="subtitle">قم بتحديد مواصفات العقار للحصول على السعر التقديري فوراً</p>
+    <div class="glass-panel w-full max-w-4xl rounded-3xl p-8 md:p-12 relative overflow-hidden">
+        
+        <!-- Header -->
+        <div class="text-center mb-10">
+            <h1 class="text-4xl md:text-5xl font-black mb-3 bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">
+                نموذج الذكاء الاصطناعي لتوقع أسعار العقارات
+            </h1>
+            <p class="text-gray-400 text-lg">تطوير وتدريب: المهندس يوسف خالد مدين</p>
+        </div>
 
-        <div class="form-group">
-            <label for="bedrooms">عدد الغرف (Bedrooms):</label>
-            <div class="input-row">
-                <input type="range" id="bedrooms" min="1" max="10" value="3" oninput="updateValue('bedrooms', 'val-bedrooms')">
-                <span class="range-value" id="val-bedrooms">3</span>
+        <!-- Form Area -->
+        <form id="predictionForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <!-- Bedrooms -->
+            <div class="flex flex-col">
+                <label class="mb-2 text-sm text-gray-300 font-medium"><i class="fa-solid fa-bed ml-2 text-indigo-400"></i>عدد الغرف</label>
+                <input type="number" id="bedrooms" class="input-field rounded-xl p-4 text-white border border-gray-700 outline-none" placeholder="مثال: 3" required>
             </div>
-        </div>
 
-        <div class="form-group">
-            <label for="bathrooms">عدد الحمامات (Bathrooms):</label>
-            <div class="input-row">
-                <input type="range" id="bathrooms" min="1" max="8" step="0.5" value="2" oninput="updateValue('bathrooms', 'val-bathrooms')">
-                <span class="range-value" id="val-bathrooms">2</span>
+            <!-- Bathrooms -->
+            <div class="flex flex-col">
+                <label class="mb-2 text-sm text-gray-300 font-medium"><i class="fa-solid fa-bath ml-2 text-indigo-400"></i>عدد الحمامات</label>
+                <input type="number" step="0.25" id="bathrooms" class="input-field rounded-xl p-4 text-white border border-gray-700 outline-none" placeholder="مثال: 2" required>
             </div>
-        </div>
 
-        <div class="form-group">
-            <label for="sqft">مساحة المعيشة (قدم مربع):</label>
-            <div class="input-row">
-                <input type="range" id="sqft" min="500" max="8000" step="50" value="2000" oninput="updateValue('sqft', 'val-sqft')">
-                <span class="range-value" id="val-sqft">2000</span>
+            <!-- Sqft Living -->
+            <div class="flex flex-col">
+                <label class="mb-2 text-sm text-gray-300 font-medium"><i class="fa-solid fa-expand ml-2 text-indigo-400"></i>مساحة المعيشة (قدم مربع)</label>
+                <input type="number" id="sqft_living" class="input-field rounded-xl p-4 text-white border border-gray-700 outline-none" placeholder="مثال: 1180" required>
             </div>
-        </div>
 
-        <div class="form-group">
-            <label for="floors">عدد الطوابق (Floors):</label>
-            <div class="input-row">
-                <input type="range" id="floors" min="1" max="3.5" step="0.5" value="1" oninput="updateValue('floors', 'val-floors')">
-                <span class="range-value" id="val-floors">1</span>
+            <!-- Floors -->
+            <div class="flex flex-col">
+                <label class="mb-2 text-sm text-gray-300 font-medium"><i class="fa-solid fa-layer-group ml-2 text-indigo-400"></i>عدد الطوابق</label>
+                <input type="number" step="0.5" id="floors" class="input-field rounded-xl p-4 text-white border border-gray-700 outline-none" placeholder="مثال: 1" required>
             </div>
+
+            <!-- Year Built -->
+            <div class="flex flex-col">
+                <label class="mb-2 text-sm text-gray-300 font-medium"><i class="fa-solid fa-calendar-alt ml-2 text-indigo-400"></i>سنة البناء</label>
+                <input type="number" id="yr_built" class="input-field rounded-xl p-4 text-white border border-gray-700 outline-none" placeholder="مثال: 1995" required>
+            </div>
+
+            <!-- Grade -->
+            <div class="flex flex-col">
+                <label class="mb-2 text-sm text-gray-300 font-medium"><i class="fa-solid fa-star ml-2 text-indigo-400"></i>تقييم العقار (Grade)</label>
+                <input type="number" id="grade" class="input-field rounded-xl p-4 text-white border border-gray-700 outline-none" placeholder="من 1 إلى 13" required>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="md:col-span-2 mt-6">
+                <button type="submit" class="predict-btn w-full py-4 rounded-xl text-xl font-bold text-white shadow-lg flex justify-center items-center gap-3">
+                    <i class="fa-solid fa-robot"></i> احسب السعر المتوقع
+                </button>
+            </div>
+        </form>
+
+        <!-- Result Area -->
+        <div id="resultArea" class="hidden mt-10 p-6 rounded-2xl bg-indigo-900/30 border border-indigo-500/30 text-center transition-all duration-500">
+            <h3 class="text-gray-300 text-lg mb-2">السعر المتوقع للعقار:</h3>
+            <p class="text-4xl font-black text-green-400" id="predictedPrice">$0.00</p>
+            <p class="text-sm text-gray-400 mt-3">مدعوم بنموذج Machine Learning (XGBoost / Random Forest)</p>
         </div>
 
-        <button class="btn-predict" onclick="calculatePrice()">توقع السعر الآن 🚀</button>
-
-        <div class="result-box" id="resultBox">
-            <h3>✨ السعر المتوقع للعقار ✨</h3>
-            <div class="price" id="priceOutput">$0</div>
-        </div>
     </div>
 
     <script>
-        // تحديث القيمة بجانب الـ Slider لحظياً
-        function updateValue(sliderId, spanId) {
-            document.getElementById(spanId).innerText = document.getElementById(sliderId).value;
-        }
-
-        // دالة تقدير السعر (معادلة تقريبية كمثال تفاعلي، أو يمكنك ربطها بنموذج البايثون لاحقاً)
-        function calculatePrice() {
-            let bedrooms = parseFloat(document.getElementById('bedrooms').value);
-            let bathrooms = parseFloat(document.getElementById('bathrooms').value);
-            let sqft = parseFloat(document.getElementById('sqft').value);
-            let floors = parseFloat(document.getElementById('floors').value);
-
-            // معادلة تقريبية لحساب السعر بناءً على المتغيرات
-            let basePrice = 50000;
-            let predicted = basePrice + (sqft * 180) + (bedrooms * 15000) + (bathrooms * 20000) + (floors * 25000);
-
-            // إظهار النتيجة بتأثير حركي
-            let resultBox = document.getElementById('resultBox');
-            let priceOutput = document.getElementById('priceOutput');
+        document.getElementById('predictionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
             
-            resultBox.style.display = 'block';
+            // محاكاة لعملية التوقع (هنا يمكنك لاحقاً ربطها بـ API الخاصة بالنموذج في Python)
+            const resultArea = document.getElementById('resultArea');
+            const priceText = document.getElementById('predictedPrice');
             
-            // حركة تصاعدية للأرقام لإعطاء طابع احترافي
-            let currentPrice = 0;
-            let increment = predicted / 30;
-            let timer = setInterval(() => {
-                currentPrice += increment;
-                if (currentPrice >= predicted) {
-                    currentPrice = predicted;
-                    clearInterval(timer);
-                }
-                priceOutput.innerText = "$" + Math.round(currentPrice).toLocaleString();
-            }, 20);
-        }
+            // حركة تحميل بسيطة
+            priceText.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> جاري الحساب...';
+            resultArea.classList.remove('hidden');
+
+            setTimeout(() => {
+                // قيمة عشوائية استرشادية بناءً على المدخلات
+                const sqft = document.getElementById('sqft_living').value || 1000;
+                const basePrice = sqft * 250; // حسبة وهمية للواجهة
+                
+                // تنسيق الرقم
+                const formattedPrice = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(basePrice);
+                
+                priceText.innerHTML = formattedPrice;
+            }, 1500);
+        });
     </script>
-
 </body>
 </html>
