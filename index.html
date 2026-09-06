@@ -1,596 +1,691 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Home, 
-  BedDouble, 
-  Bath, 
-  Maximize, 
-  Layers, 
-  CalendarDays, 
-  Star, 
-  Award, 
-  Calculator, 
-  DollarSign, 
-  TrendingUp, 
-  Sparkles, 
-  MapPin, 
-  Paintbrush, 
-  Building, 
-  User, 
-  Info, 
-  CheckCircle2,
-  Zap,
-  ChevronRight
-} from 'lucide-react';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>House Price Predictor - Yousef Khaled Madin</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.6/babel.min.js"></script>
 
-const App = () => {
-  // State declaration for page entrance animations and interactivity
-  const [showContent, setShowContent] = useState(false);
-  const [isPredicting, setIsPredicting] = useState(false);
-  const [predictedPrice, setPredictedPrice] = useState(null);
-  const [displayPrice, setDisplayPrice] = useState(0); // For animated count-up number
-  const [priceRange, setPriceRange] = useState({ min: null, max: null });
-
-  // Property features state calibrated for Egyptian market
-  const [formData, setFormData] = useState({
-    location: 'new_cairo',
-    finishing: 'super_lux',
-    propertyType: 'apartment',
-    sqm_living: 120,
-    bedrooms: 3,
-    bathrooms: 2,
-    floors: 1,
-    yr_built: 2018,
-    condition: 4,
-    grade: 8
-  });
-
-  useEffect(() => {
-    const timer = setTimeout(() => setShowContent(true), 100);
-    return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    if (predictedPrice === null) {
-      setDisplayPrice(0);
-      return;
+  <style>
+    @keyframes floatSlow {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-18px) rotate(3deg); }
+    }
+    @keyframes floatReverse {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(18px) rotate(-3deg); }
+    }
+    @keyframes shimmerGlow {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    @keyframes popIn {
+      0% { opacity: 0; transform: scale(0.9) translateY(10px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    @keyframes pulseBorder {
+      0%, 100% { border-color: rgba(168, 85, 247, 0.4); box-shadow: 0 0 15px rgba(168, 85, 247, 0.2); }
+      50% { border-color: rgba(236, 72, 153, 0.8); box-shadow: 0 0 25px rgba(236, 72, 153, 0.4); }
     }
 
-    let start = 0;
-    const duration = 1200; // ms
-    const steps = 30;
-    const stepTime = duration / steps;
-    const increment = predictedPrice / steps;
+    .animate-float-1 { animation: floatSlow 8s ease-in-out infinite; }
+    .animate-float-2 { animation: floatReverse 10s ease-in-out infinite; }
+    .animate-pop-in { animation: popIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    .animate-pulse-border { animation: pulseBorder 3s infinite; }
+    
+    .shimmer-text {
+      background: linear-gradient(90deg, #ffffff 0%, #c084fc 35%, #f472b6 65%, #ffffff 100%);
+      background-size: 200% auto;
+      color: transparent;
+      -webkit-background-clip: text;
+      animation: shimmerGlow 4s linear infinite;
+    }
 
-    const timer = setInterval(() => {
-      start += increment;
-      if (start >= predictedPrice) {
-        setDisplayPrice(predictedPrice);
-        clearInterval(timer);
-      } else {
-        setDisplayPrice(Math.round(start));
-      }
-    }, stepTime);
+    .shimmer-btn {
+      background: linear-gradient(90deg, #4f46e5, #9333ea, #ec4899, #4f46e5);
+      background-size: 300% 100%;
+      transition: all 0.5s ease;
+    }
+    .shimmer-btn:hover {
+      background-position: 100% 0;
+      box-shadow: 0 10px 30px -5px rgba(168, 85, 247, 0.6);
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans selection:bg-purple-500 selection:text-white min-h-screen relative overflow-x-hidden pb-16">
+  
+  <div id="root"></div>
 
-    return () => clearInterval(timer);
-  }, [predictedPrice]);
+  <script type="text/babel">
+    const { useState, useEffect } = React;
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: isNaN(Number(value)) || value === '' ? value : Number(value)
-    }));
-  };
+    const UserIcon = () => (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+      </svg>
+    );
 
-  const handlePredict = (e) => {
-    e.preventDefault();
-    setIsPredicting(true);
-    setPredictedPrice(null);
+    const ZapIcon = () => (
+      <svg className="w-3 h-3 fill-pink-400 text-pink-400" viewBox="0 0 24 24">
+        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+      </svg>
+    );
 
-    // Simulated Machine Learning Model processing delay
-    setTimeout(() => {
-      const locationMultipliers = {
-        new_cairo: 1.35,       // القاهرة الجديدة والتجمع الخامس
-        zayed: 1.30,           // الشيخ زايد و6 أكتوبر
-        maadi_heliopolis: 1.20,// المعادي ومصر الجديدة
-        alex_coast: 1.10,      // الإسكندرية والساحل
-        delta_provinces: 0.90, // محافظات الوجه البحري والدلتا
-        upper_egypt: 0.80      // الصعيد والمناطق الإقليمية
+    const SparklesIcon = ({ className = "w-4 h-4" }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+      </svg>
+    );
+
+    const BuildingIcon = () => (
+      <svg className="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+      </svg>
+    );
+
+    const InfoIcon = () => (
+      <svg className="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    );
+
+    const CalculatorIcon = () => (
+      <svg className="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+      </svg>
+    );
+
+    const MapPinIcon = () => (
+      <svg className="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
+    );
+
+    const PaintbrushIcon = () => (
+      <svg className="w-4 h-4 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21a4 4 0 01-4-4c0-1.423.545-2.72 1.438-3.692L12 5l4 4-8.562 8.562A3.98 3.98 0 017 21z" />
+      </svg>
+    );
+
+    const MaximizeIcon = () => (
+      <svg className="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+      </svg>
+    );
+
+    const BedDoubleIcon = () => (
+      <svg className="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+      </svg>
+    );
+
+    const BathIcon = () => (
+      <svg className="w-4 h-4 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4" />
+      </svg>
+    );
+
+    const LayersIcon = () => (
+      <svg className="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+      </svg>
+    );
+
+    const CalendarDaysIcon = () => (
+      <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+    );
+
+    const StarIcon = () => (
+      <svg className="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+      </svg>
+    );
+
+    const AwardIcon = () => (
+      <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+      </svg>
+    );
+
+    const TrendingUpIcon = () => (
+      <svg className="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+      </svg>
+    );
+
+    const CheckCircle2Icon = () => (
+      <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    );
+
+    const DollarSignIcon = () => (
+      <svg className="w-12 h-12 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    );
+
+    const App = () => {
+      const [showContent, setShowContent] = useState(false);
+      const [isPredicting, setIsPredicting] = useState(false);
+      const [predictedPrice, setPredictedPrice] = useState(null);
+      const [displayPrice, setDisplayPrice] = useState(0);
+      const [priceRange, setPriceRange] = useState({ min: null, max: null });
+
+      const [formData, setFormData] = useState({
+        location: 'new_cairo',
+        finishing: 'super_lux',
+        propertyType: 'apartment',
+        sqm_living: 120,
+        bedrooms: 3,
+        bathrooms: 2,
+        floors: 1,
+        yr_built: 2018,
+        condition: 4,
+        grade: 8
+      });
+
+      useEffect(() => {
+        const timer = setTimeout(() => setShowContent(true), 100);
+        return () => clearTimeout(timer);
+      }, []);
+
+      useEffect(() => {
+        if (predictedPrice === null) {
+          setDisplayPrice(0);
+          return;
+        }
+
+        let start = 0;
+        const duration = 1200;
+        const steps = 30;
+        const stepTime = duration / steps;
+        const increment = predictedPrice / steps;
+
+        const timer = setInterval(() => {
+          start += increment;
+          if (start >= predictedPrice) {
+            setDisplayPrice(predictedPrice);
+            clearInterval(timer);
+          } else {
+            setDisplayPrice(Math.round(start));
+          }
+        }, stepTime);
+
+        return () => clearInterval(timer);
+      }, [predictedPrice]);
+
+      const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({
+          ...prev,
+          [name]: isNaN(Number(value)) || value === '' ? value : Number(value)
+        }));
       };
 
-      const finishingMultipliers = {
-        core_shell: 0.75,  // بدون تشطيب / محارة
-        semi: 0.88,        // نصف تشطيب
-        super_lux: 1.12,   // سوبر لوكس
-        ultra_lux: 1.25    // ألترا سوبر لوكس
+      const handlePredict = (e) => {
+        e.preventDefault();
+        setIsPredicting(true);
+        setPredictedPrice(null);
+
+        setTimeout(() => {
+          const locationMultipliers = {
+            new_cairo: 1.35,
+            zayed: 1.30,
+            maadi_heliopolis: 1.20,
+            alex_coast: 1.10,
+            delta_provinces: 0.90,
+            upper_egypt: 0.80
+          };
+
+          const finishingMultipliers = {
+            core_shell: 0.75,
+            semi: 0.88,
+            super_lux: 1.12,
+            ultra_lux: 1.25
+          };
+
+          const typeMultipliers = {
+            apartment: 1.0,
+            duplex: 1.20,
+            townhouse: 1.35,
+            standalone_villa: 1.60
+          };
+
+          const baseSqmRate = 3400; 
+          const locMult = locationMultipliers[formData.location] || 1.0;
+          const finishMult = finishingMultipliers[formData.finishing] || 1.0;
+          const typeMult = typeMultipliers[formData.propertyType] || 1.0;
+
+          let calculatedPrice = formData.sqm_living * baseSqmRate * locMult * finishMult * typeMult;
+
+          const gradeFactor = 1 + ((formData.grade - 7) * 0.04);
+          calculatedPrice *= gradeFactor;
+
+          const conditionFactor = 1 + ((formData.condition - 3) * 0.03);
+          calculatedPrice *= conditionFactor;
+
+          const currentYear = 2026;
+          const age = Math.max(0, currentYear - formData.yr_built);
+          const ageDiscount = Math.min(0.20, age * 0.005);
+          calculatedPrice *= (1 - ageDiscount);
+
+          const finalEstimate = Math.round(calculatedPrice);
+          const minVal = Math.round(finalEstimate * 0.93);
+          const maxVal = Math.round(finalEstimate * 1.07);
+
+          setIsPredicting(false);
+          setPredictedPrice(finalEstimate);
+          setPriceRange({ min: minVal, max: maxVal });
+        }, 1100);
       };
 
-      const typeMultipliers = {
-        apartment: 1.0,
-        duplex: 1.20,
-        townhouse: 1.35,
-        standalone_villa: 1.60
+      const formatEGP = (amount) => {
+        return new Intl.NumberFormat('en-EG', {
+          style: 'currency',
+          currency: 'EGP',
+          maximumFractionDigits: 0
+        }).format(amount);
       };
 
-      // Base SQM Rate adjusted for thousands scale EGP
-      const baseSqmRate = 3400; 
-      const locMult = locationMultipliers[formData.location] || 1.0;
-      const finishMult = finishingMultipliers[formData.finishing] || 1.0;
-      const typeMult = typeMultipliers[formData.propertyType] || 1.0;
+      return (
+        <div className="relative">
+          {}
+          <div className="fixed top-[-50px] left-1/4 w-[550px] h-[550px] bg-indigo-600/20 rounded-full blur-[140px] pointer-events-none animate-float-1"></div>
+          <div className="fixed bottom-[-50px] right-1/4 w-[500px] h-[500px] bg-pink-600/20 rounded-full blur-[140px] pointer-events-none animate-float-2"></div>
+          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-[160px] pointer-events-none"></div>
 
-      let calculatedPrice = formData.sqm_living * baseSqmRate * locMult * finishMult * typeMult;
-
-      // Grade factor (1 to 13)
-      const gradeFactor = 1 + ((formData.grade - 7) * 0.04);
-      calculatedPrice *= gradeFactor;
-
-      // House Condition factor (1 to 5)
-      const conditionFactor = 1 + ((formData.condition - 3) * 0.03);
-      calculatedPrice *= conditionFactor;
-
-      // Age discount
-      const currentYear = 2026;
-      const age = Math.max(0, currentYear - formData.yr_built);
-      const ageDiscount = Math.min(0.20, age * 0.005);
-      calculatedPrice *= (1 - ageDiscount);
-
-      const finalEstimate = Math.round(calculatedPrice);
-      const minVal = Math.round(finalEstimate * 0.93);
-      const maxVal = Math.round(finalEstimate * 1.07);
-
-      setIsPredicting(false);
-      setPredictedPrice(finalEstimate);
-      setPriceRange({ min: minVal, max: maxVal });
-    }, 1100);
-  };
-
-  const formatEGP = (amount) => {
-    return new Intl.NumberFormat('en-EG', {
-      style: 'currency',
-      currency: 'EGP',
-      maximumFractionDigits: 0
-    }).format(amount);
-  };
-
-  return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans relative overflow-x-hidden pb-16 selection:bg-purple-500 selection:text-white">
-      
-      {}
-      <style dangerouslySetInnerHTML={{__html: `
-        @keyframes floatSlow {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-18px) rotate(3deg); }
-        }
-        @keyframes floatReverse {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(18px) rotate(-3deg); }
-        }
-        @keyframes shimmerGlow {
-          0% { background-position: -200% 0; }
-          100% { background-position: 200% 0; }
-        }
-        @keyframes popIn {
-          0% { opacity: 0; transform: scale(0.9) translateY(10px); }
-          100% { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        @keyframes pulseBorder {
-          0%, 100% { border-color: rgba(168, 85, 247, 0.4); box-shadow: 0 0 15px rgba(168, 85, 247, 0.2); }
-          50% { border-color: rgba(236, 72, 153, 0.8); box-shadow: 0 0 25px rgba(236, 72, 153, 0.4); }
-        }
-
-        .animate-float-1 { animation: floatSlow 8s ease-in-out infinite; }
-        .animate-float-2 { animation: floatReverse 10s ease-in-out infinite; }
-        .animate-pop-in { animation: popIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        .animate-pulse-border { animation: pulseBorder 3s infinite; }
-        
-        .shimmer-text {
-          background: linear-gradient(90deg, #ffffff 0%, #c084fc 35%, #f472b6 65%, #ffffff 100%);
-          background-size: 200% auto;
-          color: transparent;
-          -webkit-background-clip: text;
-          animation: shimmerGlow 4s linear infinite;
-        }
-
-        .shimmer-btn {
-          background: linear-gradient(90deg, #4f46e5, #9333ea, #ec4899, #4f46e5);
-          background-size: 300% 100%;
-          transition: all 0.5s ease;
-        }
-        .shimmer-btn:hover {
-          background-position: 100% 0;
-          box-shadow: 0 10px 30px -5px rgba(168, 85, 247, 0.6);
-        }
-      `}} />
-
-      {}
-      <div className="fixed top-[-50px] left-1/4 w-[550px] h-[550px] bg-indigo-600/20 rounded-full blur-[140px] pointer-events-none animate-float-1"></div>
-      <div className="fixed bottom-[-50px] right-1/4 w-[500px] h-[500px] bg-pink-600/20 rounded-full blur-[140px] pointer-events-none animate-float-2"></div>
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-[160px] pointer-events-none"></div>
-
-      {}
-      <div className="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-md border-b border-purple-500/30 shadow-xl shadow-purple-950/30">
-        <div className="max-w-7xl mx-auto px-4 py-3 sm:py-4 flex flex-col md:flex-row items-center justify-between gap-3 text-center md:text-left">
-          
-          <div className="flex items-center gap-3 transform hover:scale-102 transition-transform cursor-pointer">
-            <div className="p-2.5 bg-gradient-to-tr from-purple-600 via-indigo-600 to-pink-500 rounded-xl shadow-lg shadow-purple-500/30 text-white animate-bounce-slow">
-              <User size={26} />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 justify-center md:justify-start">
-                <span className="text-[11px] uppercase tracking-widest text-purple-300 font-extrabold">Created & Developed By</span>
-                <span className="bg-purple-500/20 text-pink-300 text-[10px] px-2 py-0.5 rounded-full border border-pink-500/30 font-semibold flex items-center gap-1">
-                  <Zap size={10} className="fill-pink-400 text-pink-400" /> ML Engineer
-                </span>
-              </div>
-              <h1 className="text-xl sm:text-2xl font-black tracking-tight shimmer-text">
-                Yousef Khaled Madin
-              </h1>
-            </div>
-          </div>
-
-          <div className="bg-purple-950/70 px-4 py-2 rounded-xl border border-purple-500/40 text-xs sm:text-sm text-purple-200 font-medium flex items-center gap-2 shadow-inner hover:border-purple-400 transition-colors" dir="rtl">
-            <Sparkles size={16} className="text-pink-400 animate-spin" />
-            <span>تم تطوير وإنشاء هذا الموديل بواسطة المطور <strong>يوسف خالد مدين</strong></span>
-          </div>
-
-        </div>
-      </div>
-
-      {}
-      <div className="max-w-7xl mx-auto px-4 pt-8 sm:pt-12">
-        
-        {/* Title & Introduction Header */}
-        <div className={`text-center max-w-3xl mx-auto mb-10 transition-all duration-1000 transform ${showContent ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-8'}`}>
-          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-indigo-500/20 border border-purple-500/40 px-4 py-1.5 rounded-full text-xs font-bold text-purple-200 mb-4 shadow-lg backdrop-blur-sm animate-pulse">
-            <Building size={15} className="text-indigo-400" />
-            <span>AI Real Estate Valuation Model • Egyptian Market (EGP)</span>
-          </div>
-
-          <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight mb-4">
-            Real Estate Price Predictor <br />
-            <span className="bg-gradient-to-r from-cyan-400 via-indigo-300 to-pink-400 bg-clip-text text-transparent">
-              Fair Market Value Estimation
-            </span>
-          </h2>
-
-          <p className="text-slate-400 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
-            Input property parameters below to receive real-time Machine Learning valuation calibrated for the Egyptian real estate market in thousands EGP.
-          </p>
-
-          {/* User Arabic Explanation Helper Card */}
-          <div className="mt-5 p-4 rounded-2xl bg-slate-900/90 border border-indigo-500/30 text-indigo-200 text-xs sm:text-sm leading-relaxed text-center shadow-xl hover:border-indigo-500/60 transition-all duration-300" dir="rtl">
-            <span className="font-bold text-cyan-400 ml-1.5 inline-flex items-center gap-1">
-              <Info size={16} /> شرح بسيط للمستخدم:
-            </span>
-            هذه الواجهة التفاعلية تُمكنك من التنبؤ بسعر العقار بالجنيه المصري (EGP) بالآلاف بناءً على المواصفات كالمساحة بالمتر المربع، الموقع، ونوع التشطيب.
-          </div>
-        </div>
-
-        {}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
-          {/* Input Form Section */}
-          <div className={`lg:col-span-7 transition-all duration-1000 delay-200 transform ${showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            <div className="bg-slate-900/80 backdrop-blur-2xl rounded-3xl border border-slate-800 p-6 sm:p-8 shadow-2xl relative overflow-hidden hover:border-slate-700 transition-all">
+          {}
+          <div className="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-md border-b border-purple-500/30 shadow-xl shadow-purple-950/30">
+            <div className="max-w-7xl mx-auto px-4 py-3 sm:py-4 flex flex-col md:flex-row items-center justify-between gap-3 text-center md:text-left">
               
-              <div className="flex items-center gap-3 border-b border-slate-800/80 pb-5 mb-6">
-                <div className="p-3 bg-indigo-600/20 text-indigo-400 rounded-2xl border border-indigo-500/30 shadow-inner">
-                  <Calculator size={24} />
+              <div className="flex items-center gap-3 transform hover:scale-102 transition-transform cursor-pointer">
+                <div className="p-2.5 bg-gradient-to-tr from-purple-600 via-indigo-600 to-pink-500 rounded-xl shadow-lg shadow-purple-500/30 text-white">
+                  <UserIcon />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">Property Parameters</h3>
-                  <p className="text-xs text-slate-400">Configure parameters to evaluate model prediction</p>
+                  <div className="flex items-center gap-2 justify-center md:justify-start">
+                    <span className="text-[11px] uppercase tracking-widest text-purple-300 font-extrabold">Created & Developed By</span>
+                    <span className="bg-purple-500/20 text-pink-300 text-[10px] px-2 py-0.5 rounded-full border border-pink-500/30 font-semibold flex items-center gap-1">
+                      <ZapIcon /> ML Engineer
+                    </span>
+                  </div>
+                  <h1 className="text-xl sm:text-2xl font-black tracking-tight shimmer-text">
+                    Yousef Khaled Madin
+                  </h1>
                 </div>
               </div>
 
-              <form onSubmit={handlePredict} className="space-y-5">
-                
-                {/* Location Select */}
-                <div className="group">
-                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5 group-hover:text-indigo-300 transition-colors">
-                    <MapPin size={15} className="text-indigo-400" />
-                    <span>Location / Area (الموقع والمنطقة)</span>
-                  </label>
-                  <select 
-                    name="location"
-                    value={formData.location}
-                    onChange={handleChange}
-                    className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 rounded-xl px-4 py-3.5 text-slate-200 text-sm outline-none transition-all cursor-pointer hover:border-slate-700"
-                  >
-                    <option value="new_cairo">New Cairo & Fifth Settlement (القاهرة الجديدة والتجمع)</option>
-                    <option value="zayed">Sheikh Zayed & 6th October (الشيخ زايد و6 أكتوبر)</option>
-                    <option value="maadi_heliopolis">Maadi & Heliopolis (المعادي ومصر الجديدة)</option>
-                    <option value="alex_coast">Alexandria & North Coast (الإسكندرية والساحل)</option>
-                    <option value="delta_provinces">Delta Governorates (محافظات الوجه البحري والدلتا)</option>
-                    <option value="upper_egypt">Upper Egypt & Regional (الصعيد والمناطق الإقليمية)</option>
-                  </select>
-                </div>
+              <div className="bg-purple-950/70 px-4 py-2 rounded-xl border border-purple-500/40 text-xs sm:text-sm text-purple-200 font-medium flex items-center gap-2 shadow-inner hover:border-purple-400 transition-colors" dir="rtl">
+                <SparklesIcon className="w-4 h-4 text-pink-400 animate-spin" />
+                <span>تم تطوير وإنشاء هذا الموديل بواسطة المطور <strong>يوسف خالد مدين</strong></span>
+              </div>
 
-                {/* Property Type & Finishing Level Row */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <div className="group">
-                    <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5 group-hover:text-purple-300 transition-colors">
-                      <Building size={15} className="text-purple-400" />
-                      <span>Property Type (نوع العقار)</span>
-                    </label>
-                    <select 
-                      name="propertyType"
-                      value={formData.propertyType}
-                      onChange={handleChange}
-                      className="w-full bg-slate-950 border border-slate-800 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30 rounded-xl px-4 py-3.5 text-slate-200 text-sm outline-none transition-all cursor-pointer hover:border-slate-700"
-                    >
-                      <option value="apartment">Apartment (شقة سكنية)</option>
-                      <option value="duplex">Duplex / Penthouse (دوبلكس / بنتهاوس)</option>
-                      <option value="townhouse">Townhouse / Twinhouse (تاون هاوس)</option>
-                      <option value="standalone_villa">Standalone Villa (فيلا مستقلة)</option>
-                    </select>
-                  </div>
-
-                  <div className="group">
-                    <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5 group-hover:text-pink-300 transition-colors">
-                      <Paintbrush size={15} className="text-pink-400" />
-                      <span>Finishing Level (مستوى التشطيب)</span>
-                    </label>
-                    <select 
-                      name="finishing"
-                      value={formData.finishing}
-                      onChange={handleChange}
-                      className="w-full bg-slate-950 border border-slate-800 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/30 rounded-xl px-4 py-3.5 text-slate-200 text-sm outline-none transition-all cursor-pointer hover:border-slate-700"
-                    >
-                      <option value="core_shell">Core & Shell / Unfinished (بدون تشطيب / محارة)</option>
-                      <option value="semi">Semi-Finished (نصف تشطيب)</option>
-                      <option value="super_lux">Super Lux (سوبر لوكس)</option>
-                      <option value="ultra_lux">Ultra Lux / Deluxe (ألترا سوبر لوكس)</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* SQM Area & Bedrooms Row */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <div className="group">
-                    <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5 group-hover:text-cyan-300 transition-colors">
-                      <Maximize size={15} className="text-cyan-400" />
-                      <span>Living Area - sq.m (المساحة بالمتر)</span>
-                    </label>
-                    <div className="relative">
-                      <input 
-                        type="number"
-                        name="sqm_living"
-                        value={formData.sqm_living}
-                        onChange={handleChange}
-                        min="30"
-                        max="1500"
-                        className="w-full bg-slate-950 border border-slate-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/30 rounded-xl px-4 py-3.5 text-slate-200 text-sm outline-none transition-all hover:border-slate-700"
-                      />
-                      <span className="absolute right-3 top-3.5 text-xs text-slate-500 font-extrabold bg-slate-900 px-2 py-0.5 rounded border border-slate-800">m²</span>
-                    </div>
-                  </div>
-
-                  <div className="group">
-                    <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5 group-hover:text-indigo-300 transition-colors">
-                      <BedDouble size={15} className="text-indigo-400" />
-                      <span>Bedrooms (عدد الغرف)</span>
-                    </label>
-                    <input 
-                      type="number"
-                      name="bedrooms"
-                      value={formData.bedrooms}
-                      onChange={handleChange}
-                      min="1"
-                      max="12"
-                      className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 rounded-xl px-4 py-3.5 text-slate-200 text-sm outline-none transition-all hover:border-slate-700"
-                    />
-                  </div>
-                </div>
-
-                {/* Bathrooms, Floors & Year Built Row */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                      <Bath size={15} className="text-teal-400" />
-                      <span>Bathrooms (الحمامات)</span>
-                    </label>
-                    <input 
-                      type="number"
-                      name="bathrooms"
-                      value={formData.bathrooms}
-                      onChange={handleChange}
-                      min="1"
-                      max="8"
-                      className="w-full bg-slate-950 border border-slate-800 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/30 rounded-xl px-4 py-3.5 text-slate-200 text-sm outline-none transition-all hover:border-slate-700"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                      <Layers size={15} className="text-amber-400" />
-                      <span>Floors (الطوابق)</span>
-                    </label>
-                    <input 
-                      type="number"
-                      name="floors"
-                      value={formData.floors}
-                      onChange={handleChange}
-                      min="1"
-                      max="5"
-                      className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/30 rounded-xl px-4 py-3.5 text-slate-200 text-sm outline-none transition-all hover:border-slate-700"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                      <CalendarDays size={15} className="text-emerald-400" />
-                      <span>Year Built (سنة البناء)</span>
-                    </label>
-                    <input 
-                      type="number"
-                      name="yr_built"
-                      value={formData.yr_built}
-                      onChange={handleChange}
-                      min="1950"
-                      max="2026"
-                      className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 rounded-xl px-4 py-3.5 text-slate-200 text-sm outline-none transition-all hover:border-slate-700"
-                    />
-                  </div>
-                </div>
-
-                {/* Condition & Grade Range Sliders */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-2">
-                  <div className="bg-slate-950/70 p-4 rounded-2xl border border-slate-800 hover:border-amber-500/40 transition-colors">
-                    <div className="flex justify-between items-center mb-3">
-                      <label className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1">
-                        <Star size={14} className="text-amber-400" />
-                        <span>Condition (الحالة 1 - 5)</span>
-                      </label>
-                      <span className="text-xs font-black text-amber-400 px-2.5 py-1 rounded-lg bg-amber-400/10 border border-amber-400/30 shadow-inner">
-                        {formData.condition} / 5
-                      </span>
-                    </div>
-                    <input 
-                      type="range"
-                      name="condition"
-                      min="1"
-                      max="5"
-                      value={formData.condition}
-                      onChange={handleChange}
-                      className="w-full accent-amber-400 cursor-pointer h-2 bg-slate-800 rounded-lg"
-                    />
-                  </div>
-
-                  <div className="bg-slate-950/70 p-4 rounded-2xl border border-slate-800 hover:border-purple-500/40 transition-colors">
-                    <div className="flex justify-between items-center mb-3">
-                      <label className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1">
-                        <Award size={14} className="text-purple-400" />
-                        <span>Grade (التقييم 1 - 13)</span>
-                      </label>
-                      <span className="text-xs font-black text-purple-400 px-2.5 py-1 rounded-lg bg-purple-400/10 border border-purple-400/30 shadow-inner">
-                        {formData.grade} / 13
-                      </span>
-                    </div>
-                    <input 
-                      type="range"
-                      name="grade"
-                      min="1"
-                      max="13"
-                      value={formData.grade}
-                      onChange={handleChange}
-                      className="w-full accent-purple-400 cursor-pointer h-2 bg-slate-800 rounded-lg"
-                    />
-                  </div>
-                </div>
-
-                {}
-                <button
-                  type="submit"
-                  disabled={isPredicting}
-                  className="w-full mt-6 shimmer-btn text-white font-black py-4 px-6 rounded-2xl shadow-xl transform active:scale-95 transition-all flex items-center justify-center gap-2.5 disabled:opacity-50 cursor-pointer group"
-                >
-                  {isPredicting ? (
-                    <>
-                      <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
-                      <span className="tracking-wide">Running Prediction Model... (جاري الحساب)</span>
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles size={20} className="text-pink-300 group-hover:rotate-12 transition-transform" />
-                      <span className="text-base tracking-wide">Calculate Estimated Price (احسب السعر المتوقع)</span>
-                      <ChevronRight size={18} className="text-pink-200 group-hover:translate-x-1 transition-transform" />
-                    </>
-                  )}
-                </button>
-
-              </form>
             </div>
           </div>
 
           {}
-          <div className={`lg:col-span-5 transition-all duration-1000 delay-300 transform ${showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            <div className="sticky top-24 space-y-6">
+          <div className="max-w-7xl mx-auto px-4 pt-8 sm:pt-12">
+            
+            <div className={`text-center max-w-3xl mx-auto mb-10 transition-all duration-1000 transform ${showContent ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-8'}`}>
+              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-indigo-500/20 border border-purple-500/40 px-4 py-1.5 rounded-full text-xs font-bold text-purple-200 mb-4 shadow-lg backdrop-blur-sm animate-pulse">
+                <BuildingIcon />
+                <span>AI Real Estate Valuation Model • Egyptian Market (EGP)</span>
+              </div>
+
+              <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight mb-4">
+                Real Estate Price Predictor <br />
+                <span className="bg-gradient-to-r from-cyan-400 via-indigo-300 to-pink-400 bg-clip-text text-transparent">
+                  Fair Market Value Estimation
+                </span>
+              </h2>
+
+              <p className="text-slate-400 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
+                Input property parameters below to receive real-time Machine Learning valuation calibrated for the Egyptian real estate market in thousands EGP.
+              </p>
+
+              {/* Simplified Arabic Explanation Helper Card */}
+              <div className="mt-5 p-4 rounded-2xl bg-slate-900/90 border border-indigo-500/30 text-indigo-200 text-xs sm:text-sm leading-relaxed text-center shadow-xl hover:border-indigo-500/60 transition-all duration-300" dir="rtl">
+                <span className="font-bold text-cyan-400 ml-1.5 inline-flex items-center gap-1">
+                  <InfoIcon /> شرح بسيط للمستخدم:
+                </span>
+                هذه الواجهة التفاعلية تُمكنك من التنبؤ بسعر العقار بالجنيه المصري (EGP) بالآلاف بناءً على المواصفات كالمساحة بالمتر المربع، الموقع، ونوع التشطيب.
+              </div>
+            </div>
+
+            {}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
               
-              <div className={`bg-slate-900/90 backdrop-blur-2xl rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden text-center transition-all duration-500 ${predictedPrice !== null ? 'animate-pulse-border border-2' : 'border border-indigo-500/30'}`}>
-                
-                {/* Result Glow Decorative Element */}
-                <div className="absolute -top-20 -right-20 w-44 h-44 bg-purple-500/20 rounded-full blur-3xl pointer-events-none"></div>
-
-                <div className="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/30 px-3.5 py-1.5 rounded-full text-xs font-bold text-indigo-300 mb-6 shadow-inner">
-                  <TrendingUp size={14} className="text-cyan-400" />
-                  <span>Model Output Result (نتيجة التقدير)</span>
-                </div>
-
-                {isPredicting && (
-                  <div className="py-12 flex flex-col items-center justify-center space-y-4">
-                    <div className="relative">
-                      <div className="w-14 h-14 border-4 border-indigo-500/20 border-t-indigo-400 rounded-full animate-spin"></div>
-                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                        <Sparkles size={20} className="text-pink-400 animate-pulse" />
-                      </div>
+              <div className={`lg:col-span-7 transition-all duration-1000 delay-200 transform ${showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+                <div className="bg-slate-900/80 backdrop-blur-2xl rounded-3xl border border-slate-800 p-6 sm:p-8 shadow-2xl relative overflow-hidden hover:border-slate-700 transition-all">
+                  
+                  <div className="flex items-center gap-3 border-b border-slate-800/80 pb-5 mb-6">
+                    <div className="p-3 bg-indigo-600/20 text-indigo-400 rounded-2xl border border-indigo-500/30 shadow-inner">
+                      <CalculatorIcon />
                     </div>
-                    <p className="text-sm font-semibold text-slate-300 animate-pulse">Running ML evaluation algorithms...</p>
+                    <div>
+                      <h3 className="text-lg font-bold text-white">Property Parameters</h3>
+                      <p className="text-xs text-slate-400">Configure parameters to evaluate model prediction</p>
+                    </div>
                   </div>
-                )}
 
-                {!isPredicting && predictedPrice === null && (
-                  <div className="py-12 border-2 border-dashed border-slate-800 rounded-2xl p-6 hover:border-slate-700 transition-colors">
-                    <DollarSign size={44} className="mx-auto text-slate-600 mb-3 animate-bounce-slow" />
-                    <p className="text-sm font-bold text-slate-300">Ready to Estimate</p>
-                    <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">Configure property specs and click calculate to view estimated market valuation in EGP thousands.</p>
-                  </div>
-                )}
-
-                {!isPredicting && predictedPrice !== null && (
-                  <div className="animate-pop-in space-y-5">
-                    <p className="text-xs font-extrabold text-slate-400 uppercase tracking-widest">
-                      Estimated Fair Market Price
-                    </p>
+                  <form onSubmit={handlePredict} className="space-y-5">
                     
-                    {/* Animated Number Counter Display */}
-                    <div className="text-3xl sm:text-4xl lg:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 tracking-tight drop-shadow-md">
-                      {formatEGP(displayPrice)}
+                    {/* Location Select */}
+                    <div className="group">
+                      <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5 group-hover:text-indigo-300 transition-colors">
+                        <MapPinIcon />
+                        <span>Location / Area (الموقع والمنطقة)</span>
+                      </label>
+                      <select 
+                        name="location"
+                        value={formData.location}
+                        onChange={handleChange}
+                        className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 rounded-xl px-4 py-3.5 text-slate-200 text-sm outline-none transition-all cursor-pointer hover:border-slate-700"
+                      >
+                        <option value="new_cairo">New Cairo & Fifth Settlement (القاهرة الجديدة والتجمع)</option>
+                        <option value="zayed">Sheikh Zayed & 6th October (الشيخ زايد و6 أكتوبر)</option>
+                        <option value="maadi_heliopolis">Maadi & Heliopolis (المعادي ومصر الجديدة)</option>
+                        <option value="alex_coast">Alexandria & North Coast (الإسكندرية والساحل)</option>
+                        <option value="delta_provinces">Delta Governorates (محافظات الوجه البحري والدلتا)</option>
+                        <option value="upper_egypt">Upper Egypt & Regional (الصعيد والمناطق الإقليمية)</option>
+                      </select>
                     </div>
 
-                    {priceRange.min && priceRange.max && (
-                      <div className="p-3.5 bg-slate-950/80 rounded-2xl border border-slate-800/80 text-xs text-slate-400 flex justify-between items-center shadow-inner">
-                        <span className="font-semibold text-slate-300">Expected Range:</span>
-                        <span className="text-emerald-400 font-mono font-bold text-sm">
-                          {formatEGP(priceRange.min)} - {formatEGP(priceRange.max)}
-                        </span>
+                    {/* Property Type & Finishing Level Row */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                      <div className="group">
+                        <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5 group-hover:text-purple-300 transition-colors">
+                          <BuildingIcon />
+                          <span>Property Type (نوع العقار)</span>
+                        </label>
+                        <select 
+                          name="propertyType"
+                          value={formData.propertyType}
+                          onChange={handleChange}
+                          className="w-full bg-slate-950 border border-slate-800 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30 rounded-xl px-4 py-3.5 text-slate-200 text-sm outline-none transition-all cursor-pointer hover:border-slate-700"
+                        >
+                          <option value="apartment">Apartment (شقة سكنية)</option>
+                          <option value="duplex">Duplex / Penthouse (دوبلكس / بنتهاوس)</option>
+                          <option value="townhouse">Townhouse / Twinhouse (تاون هاوس)</option>
+                          <option value="standalone_villa">Standalone Villa (فيلا مستقلة)</option>
+                        </select>
                       </div>
-                    )}
 
-                    <div className="p-4 rounded-2xl bg-emerald-950/30 border border-emerald-500/30 text-emerald-200 text-xs leading-relaxed text-right shadow-lg" dir="rtl">
-                      <div className="flex items-center gap-1.5 font-bold mb-1 text-emerald-400">
-                        <CheckCircle2 size={16} />
-                        <span>تقييم النطاق (EGP بالآلاف):</span>
+                      <div className="group">
+                        <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5 group-hover:text-pink-300 transition-colors">
+                          <PaintbrushIcon />
+                          <span>Finishing Level (مستوى التشطيب)</span>
+                        </label>
+                        <select 
+                          name="finishing"
+                          value={formData.finishing}
+                          onChange={handleChange}
+                          className="w-full bg-slate-950 border border-slate-800 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/30 rounded-xl px-4 py-3.5 text-slate-200 text-sm outline-none transition-all cursor-pointer hover:border-slate-700"
+                        >
+                          <option value="core_shell">Core & Shell / Unfinished (بدون تشطيب / محارة)</option>
+                          <option value="semi">Semi-Finished (نصف تشطيب)</option>
+                          <option value="super_lux">Super Lux (سوبر لوكس)</option>
+                          <option value="ultra_lux">Ultra Lux / Deluxe (ألترا سوبر لوكس)</option>
+                        </select>
                       </div>
-                      تم احتساب السعر بنطاق الآلاف بالجنيه المصري بناءً على المساحة بالمتر المربع ومؤشرات السوق المحسوبة بالذكاء الاصطناعي.
                     </div>
-                  </div>
-                )}
 
+                    {/* SQM Area & Bedrooms Row */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                      <div className="group">
+                        <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5 group-hover:text-cyan-300 transition-colors">
+                          <MaximizeIcon />
+                          <span>Living Area - sq.m (المساحة بالمتر)</span>
+                        </label>
+                        <div className="relative">
+                          <input 
+                            type="number"
+                            name="sqm_living"
+                            value={formData.sqm_living}
+                            onChange={handleChange}
+                            min="30"
+                            max="1500"
+                            className="w-full bg-slate-950 border border-slate-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/30 rounded-xl px-4 py-3.5 text-slate-200 text-sm outline-none transition-all hover:border-slate-700"
+                          />
+                          <span className="absolute right-3 top-3.5 text-xs text-slate-500 font-extrabold bg-slate-900 px-2 py-0.5 rounded border border-slate-800">m²</span>
+                        </div>
+                      </div>
+
+                      <div className="group">
+                        <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5 group-hover:text-indigo-300 transition-colors">
+                          <BedDoubleIcon />
+                          <span>Bedrooms (عدد الغرف)</span>
+                        </label>
+                        <input 
+                          type="number"
+                          name="bedrooms"
+                          value={formData.bedrooms}
+                          onChange={handleChange}
+                          min="1"
+                          max="12"
+                          className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 rounded-xl px-4 py-3.5 text-slate-200 text-sm outline-none transition-all hover:border-slate-700"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Bathrooms, Floors & Year Built Row */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                          <BathIcon />
+                          <span>Bathrooms (الحمامات)</span>
+                        </label>
+                        <input 
+                          type="number"
+                          name="bathrooms"
+                          value={formData.bathrooms}
+                          onChange={handleChange}
+                          min="1"
+                          max="8"
+                          className="w-full bg-slate-950 border border-slate-800 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/30 rounded-xl px-4 py-3.5 text-slate-200 text-sm outline-none transition-all hover:border-slate-700"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                          <LayersIcon />
+                          <span>Floors (الطوابق)</span>
+                        </label>
+                        <input 
+                          type="number"
+                          name="floors"
+                          value={formData.floors}
+                          onChange={handleChange}
+                          min="1"
+                          max="5"
+                          className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/30 rounded-xl px-4 py-3.5 text-slate-200 text-sm outline-none transition-all hover:border-slate-700"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                          <CalendarDaysIcon />
+                          <span>Year Built (سنة البناء)</span>
+                        </label>
+                        <input 
+                          type="number"
+                          name="yr_built"
+                          value={formData.yr_built}
+                          onChange={handleChange}
+                          min="1950"
+                          max="2026"
+                          className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 rounded-xl px-4 py-3.5 text-slate-200 text-sm outline-none transition-all hover:border-slate-700"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Condition & Grade Range Sliders */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-2">
+                      <div className="bg-slate-950/70 p-4 rounded-2xl border border-slate-800 hover:border-amber-500/40 transition-colors">
+                        <div className="flex justify-between items-center mb-3">
+                          <label className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1">
+                            <StarIcon />
+                            <span>Condition (الحالة 1 - 5)</span>
+                          </label>
+                          <span className="text-xs font-black text-amber-400 px-2.5 py-1 rounded-lg bg-amber-400/10 border border-amber-400/30 shadow-inner">
+                            {formData.condition} / 5
+                          </span>
+                        </div>
+                        <input 
+                          type="range"
+                          name="condition"
+                          min="1"
+                          max="5"
+                          value={formData.condition}
+                          onChange={handleChange}
+                          className="w-full accent-amber-400 cursor-pointer h-2 bg-slate-800 rounded-lg"
+                        />
+                      </div>
+
+                      <div className="bg-slate-950/70 p-4 rounded-2xl border border-slate-800 hover:border-purple-500/40 transition-colors">
+                        <div className="flex justify-between items-center mb-3">
+                          <label className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1">
+                            <AwardIcon />
+                            <span>Grade (التقييم 1 - 13)</span>
+                          </label>
+                          <span className="text-xs font-black text-purple-400 px-2.5 py-1 rounded-lg bg-purple-400/10 border border-purple-400/30 shadow-inner">
+                            {formData.grade} / 13
+                          </span>
+                        </div>
+                        <input 
+                          type="range"
+                          name="grade"
+                          min="1"
+                          max="13"
+                          value={formData.grade}
+                          onChange={handleChange}
+                          className="w-full accent-purple-400 cursor-pointer h-2 bg-slate-800 rounded-lg"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Prediction Submit Button */}
+                    <button
+                      type="submit"
+                      disabled={isPredicting}
+                      className="w-full mt-6 shimmer-btn text-white font-black py-4 px-6 rounded-2xl shadow-xl transform active:scale-95 transition-all flex items-center justify-center gap-2.5 disabled:opacity-50 cursor-pointer group"
+                    >
+                      {isPredicting ? (
+                        <>
+                          <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
+                          <span className="tracking-wide">Running Prediction Model... (جاري الحساب)</span>
+                        </>
+                      ) : (
+                        <>
+                          <SparklesIcon className="w-5 h-5 text-pink-300 group-hover:rotate-12 transition-transform" />
+                          <span className="text-base tracking-wide">Calculate Estimated Price (احسب السعر المتوقع)</span>
+                        </>
+                      )}
+                    </button>
+
+                  </form>
+                </div>
               </div>
 
               {}
-              <div className="bg-slate-900/70 rounded-2xl border border-slate-800 p-5 text-xs text-slate-400 space-y-3 shadow-lg hover:border-slate-700 transition-colors">
-                <div className="flex items-center gap-2 text-indigo-400 font-bold text-sm">
-                  <Info size={16} />
-                  <span>About Model Parameters (عن إعدادات الموديل)</span>
-                </div>
-                <p className="leading-relaxed">
-                  The Machine Learning architecture evaluates feature weights including geospatial area indices, finishing multipliers, living area in square meters, and structural grades.
-                </p>
-                <div className="p-3 rounded-xl bg-slate-950 text-indigo-300 text-[11px] font-medium border border-indigo-500/20" dir="rtl">
-                  💡 تم إعداد الموديل وضبطه بواسطة المطور <strong>يوسف خالد مدين (Yousef Khaled Madin)</strong> ليراعي أسعار السوق المصري بالجنيه.
+              <div className={`lg:col-span-5 transition-all duration-1000 delay-300 transform ${showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+                <div className="sticky top-24 space-y-6">
+                  
+                  <div className={`bg-slate-900/90 backdrop-blur-2xl rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden text-center transition-all duration-500 ${predictedPrice !== null ? 'animate-pulse-border border-2' : 'border border-indigo-500/30'}`}>
+                    
+                    <div className="absolute -top-20 -right-20 w-44 h-44 bg-purple-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+                    <div className="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/30 px-3.5 py-1.5 rounded-full text-xs font-bold text-indigo-300 mb-6 shadow-inner">
+                      <TrendingUpIcon />
+                      <span>Model Output Result (نتيجة التقدير)</span>
+                    </div>
+
+                    {isPredicting && (
+                      <div className="py-12 flex flex-col items-center justify-center space-y-4">
+                        <div className="relative">
+                          <div className="w-14 h-14 border-4 border-indigo-500/20 border-t-indigo-400 rounded-full animate-spin"></div>
+                          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                            <SparklesIcon className="w-5 h-5 text-pink-400 animate-pulse" />
+                          </div>
+                        </div>
+                        <p className="text-sm font-semibold text-slate-300 animate-pulse">Running ML evaluation algorithms...</p>
+                      </div>
+                    )}
+
+                    {!isPredicting && predictedPrice === null && (
+                      <div className="py-12 border-2 border-dashed border-slate-800 rounded-2xl p-6 hover:border-slate-700 transition-colors">
+                        <div className="flex justify-center mb-3">
+                          <DollarSignIcon />
+                        </div>
+                        <p className="text-sm font-bold text-slate-300">Ready to Estimate</p>
+                        <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">Configure property specs and click calculate to view estimated market valuation in EGP thousands.</p>
+                      </div>
+                    )}
+
+                    {!isPredicting && predictedPrice !== null && (
+                      <div className="animate-pop-in space-y-5">
+                        <p className="text-xs font-extrabold text-slate-400 uppercase tracking-widest">
+                          Estimated Fair Market Price
+                        </p>
+                        
+                        <div className="text-3xl sm:text-4xl lg:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 tracking-tight drop-shadow-md">
+                          {formatEGP(displayPrice)}
+                        </div>
+
+                        {priceRange.min && priceRange.max && (
+                          <div className="p-3.5 bg-slate-950/80 rounded-2xl border border-slate-800/80 text-xs text-slate-400 flex justify-between items-center shadow-inner">
+                            <span className="font-semibold text-slate-300">Expected Range:</span>
+                            <span className="text-emerald-400 font-mono font-bold text-sm">
+                              {formatEGP(priceRange.min)} - {formatEGP(priceRange.max)}
+                            </span>
+                          </div>
+                        )}
+
+                        <div className="p-4 rounded-2xl bg-emerald-950/30 border border-emerald-500/30 text-emerald-200 text-xs leading-relaxed text-right shadow-lg" dir="rtl">
+                          <div className="flex items-center gap-1.5 font-bold mb-1 text-emerald-400">
+                            <CheckCircle2Icon />
+                            <span>تقييم النطاق (EGP بالآلاف):</span>
+                          </div>
+                          تم احتساب السعر بنطاق الآلاف بالجنيه المصري بناءً على المساحة بالمتر المربع ومؤشرات السوق المحسوبة بالذكاء الاصطناعي.
+                        </div>
+                      </div>
+                    )}
+
+                  </div>
+
+                  <div className="bg-slate-900/70 rounded-2xl border border-slate-800 p-5 text-xs text-slate-400 space-y-3 shadow-lg hover:border-slate-700 transition-colors">
+                    <div className="flex items-center gap-2 text-indigo-400 font-bold text-sm">
+                      <InfoIcon />
+                      <span>About Model Parameters (عن إعدادات الموديل)</span>
+                    </div>
+                    <p className="leading-relaxed">
+                      The Machine Learning architecture evaluates feature weights including geospatial area indices, finishing multipliers, living area in square meters, and structural grades.
+                    </p>
+                    <div className="p-3 rounded-xl bg-slate-950 text-indigo-300 text-[11px] font-medium border border-indigo-500/20" dir="rtl">
+                      💡 تم إعداد الموديل وضبطه بواسطة المطور <strong>يوسف خالد مدين (Yousef Khaled Madin)</strong> ليراعي أسعار السوق المصري بالجنيه.
+                    </div>
+                  </div>
+
                 </div>
               </div>
 
             </div>
+
           </div>
-
         </div>
+      );
+    };
 
-      </div>
-    </div>
-  );
-};
-
-export default App;
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
